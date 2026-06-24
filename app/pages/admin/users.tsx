@@ -4,6 +4,17 @@ import { identityService } from "~/services/identity.service";
 import type { UserProfile, CreateUserPayload, Role } from "~/types/auth.type";
 import RoleGuard from "~/components/auth/RoleGuard";
 
+import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
+import { Badge } from "~/components/ui/badge";
+import { Checkbox } from "~/components/ui/checkbox";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "~/components/ui/table";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "~/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "~/components/ui/dialog";
+import { UserPlus, MoreHorizontal, Edit, Trash2, Power, PowerOff, ShieldCheck } from "lucide-react";
+
 export default function AdminUsersPage() {
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
@@ -25,82 +36,150 @@ export default function AdminUsersPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "users"] }),
   });
 
-  if (isLoading) return <p>Loading users...</p>;
+  if (isLoading) return <div className="p-8 text-center text-muted-foreground animate-pulse">Loading users...</div>;
 
   return (
-    <RoleGuard roles={["ADMIN"]} fallback={<p>Access denied.</p>}>
-      <div>
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem" }}>
-          <h1>User Management</h1>
-          <button onClick={() => setShowCreate(true)}>Add User</button>
+    <RoleGuard roles={["ADMIN"]} fallback={<div className="p-8 text-center">Access denied.</div>}>
+      <div className="container mx-auto p-6 max-w-7xl animate-in fade-in zoom-in-95 duration-500">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">User Management</h1>
+            <p className="text-muted-foreground mt-1 text-lg">
+              Manage system access and roles across the platform.
+            </p>
+          </div>
+          <Button onClick={() => setShowCreate(true)} className="gap-2 shadow-sm">
+            <UserPlus className="h-4 w-4" />
+            Add User
+          </Button>
         </div>
 
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Roles</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users?.map((user) => (
-              <tr key={user.id}>
-                <td>{user.firstName} {user.lastName}</td>
-                <td>{user.email}</td>
-                <td>{user.roles.join(", ")}</td>
-                <td>{user.enabled ? "Active" : "Disabled"}</td>
-                <td style={{ display: "flex", gap: "0.5rem" }}>
-                  <button onClick={() => setEditingUser(user)}>Edit</button>
-                  <button
-                    onClick={() =>
-                      toggleMutation.mutate({
-                        id: user.id,
-                        enabled: !user.enabled,
-                        roles: user.roles as Role[],
-                      })
-                    }
-                  >
-                    {user.enabled ? "Disable" : "Enable"}
-                  </button>
-                  <button onClick={() => deleteMutation.mutate(user.id)}>
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <Card className="border-border/50 shadow-sm">
+          <CardHeader>
+            <CardTitle>System Users</CardTitle>
+            <CardDescription>A complete directory of all registered personnel and their access levels.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader className="bg-muted/50">
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Roles</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right w-[100px]">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {users?.map((user) => (
+                    <TableRow key={user.id} className="hover:bg-muted/30 transition-colors">
+                      <TableCell className="font-medium text-foreground">
+                        {user.firstName} {user.lastName}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {user.email}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {user.roles.map(r => (
+                            <Badge key={r} variant="secondary" className="text-xs font-medium px-2 py-0.5">
+                              {r}
+                            </Badge>
+                          ))}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {user.enabled ? (
+                          <Badge variant="outline" className="text-emerald-500 border-emerald-500/30 bg-emerald-500/10 gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Active
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-muted-foreground gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50" /> Disabled
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <span className="sr-only">Open menu</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => setEditingUser(user)}>
+                              <Edit className="mr-2 h-4 w-4" /> Edit User
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => toggleMutation.mutate({ id: user.id, enabled: !user.enabled, roles: user.roles as Role[] })}
+                            >
+                              {user.enabled ? (
+                                <><PowerOff className="mr-2 h-4 w-4" /> Disable Access</>
+                              ) : (
+                                <><Power className="mr-2 h-4 w-4" /> Enable Access</>
+                              )}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              onClick={() => { if(confirm("Delete this user permanently?")) deleteMutation.mutate(user.id); }}
+                              className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" /> Delete User
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {(!users || users.length === 0) && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                        No users found.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
 
-        {showCreate && (
-          <CreateUserModal
-            onClose={() => setShowCreate(false)}
-            onSuccess={() => {
-              queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
-              setShowCreate(false);
-            }}
-          />
-        )}
+        <Dialog open={showCreate} onOpenChange={setShowCreate}>
+          <DialogContent className="sm:max-w-[425px]">
+            <CreateUserForm 
+              onClose={() => setShowCreate(false)} 
+              onSuccess={() => {
+                queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+                setShowCreate(false);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
 
-        {editingUser && (
-          <EditUserModal
-            user={editingUser}
-            onClose={() => setEditingUser(null)}
-            onSuccess={() => {
-              queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
-              setEditingUser(null);
-            }}
-          />
-        )}
+        <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
+          <DialogContent className="sm:max-w-[425px]">
+            {editingUser && (
+              <EditUserForm 
+                user={editingUser}
+                onClose={() => setEditingUser(null)}
+                onSuccess={() => {
+                  queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+                  setEditingUser(null);
+                }}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </RoleGuard>
   );
 }
 
-// ── Create Modal ───────────────────────────────────────────────────────────
-function CreateUserModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
+function CreateUserForm({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
   const [form, setForm] = useState<CreateUserPayload>({
     firstName: "",
     lastName: "",
@@ -114,49 +193,65 @@ function CreateUserModal({ onClose, onSuccess }: { onClose: () => void; onSucces
     onSuccess,
   });
 
-  const roles: Role[] = ["ADMIN", "COORDINATOR", "RESPONDER"];
+  const availableRoles: Role[] = ["ADMIN", "RESPONDER", "VICTIM"];
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ background: "white", padding: "2rem", borderRadius: "8px", minWidth: "400px" }}>
-        <h2>Create User</h2>
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-          <input placeholder="First name" value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))} />
-          <input placeholder="Last name" value={form.lastName} onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))} />
-          <input placeholder="Email" type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
-          <input placeholder="Password" type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} />
-          <div>
-            <p style={{ margin: "0 0 0.5rem" }}>Roles</p>
-            {roles.map(role => (
-              <label key={role} style={{ marginRight: "1rem" }}>
-                <input
-                  type="checkbox"
+    <>
+      <DialogHeader>
+        <DialogTitle>Create New User</DialogTitle>
+        <DialogDescription>Add a new user to the system. They will receive access immediately.</DialogDescription>
+      </DialogHeader>
+      <div className="grid gap-4 py-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="firstName">First name</Label>
+            <Input id="firstName" value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="lastName">Last name</Label>
+            <Input id="lastName" value={form.lastName} onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))} />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input id="email" type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="password">Password</Label>
+          <Input id="password" type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} />
+        </div>
+        <div className="space-y-3 pt-2">
+          <Label className="flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-muted-foreground"/> Assign Roles</Label>
+          <div className="grid grid-cols-2 gap-3">
+            {availableRoles.map(role => (
+              <div key={role} className="flex items-center space-x-2 border rounded-md p-3 hover:bg-muted/30 transition-colors">
+                <Checkbox 
+                  id={`role-${role}`}
                   checked={form.roles.includes(role)}
-                  onChange={e => setForm(f => ({
+                  onCheckedChange={(checked) => setForm(f => ({
                     ...f,
-                    roles: e.target.checked
-                      ? [...f.roles, role]
-                      : f.roles.filter(r => r !== role)
+                    roles: checked ? [...f.roles, role] : f.roles.filter(r => r !== role)
                   }))}
                 />
-                {" "}{role}
-              </label>
+                <label htmlFor={`role-${role}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer">
+                  {role}
+                </label>
+              </div>
             ))}
-          </div>
-          <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
-            <button onClick={onClose}>Cancel</button>
-            <button onClick={() => mutation.mutate(form)} disabled={mutation.isPending}>
-              {mutation.isPending ? "Creating..." : "Create"}
-            </button>
           </div>
         </div>
       </div>
-    </div>
+      <DialogFooter>
+        <Button variant="outline" onClick={onClose} disabled={mutation.isPending}>Cancel</Button>
+        <Button onClick={() => mutation.mutate(form)} disabled={mutation.isPending}>
+          {mutation.isPending ? "Creating..." : "Create User"}
+        </Button>
+      </DialogFooter>
+    </>
   );
 }
 
-// ── Edit Modal ─────────────────────────────────────────────────────────────
-function EditUserModal({ user, onClose, onSuccess }: { user: UserProfile; onClose: () => void; onSuccess: () => void }) {
+function EditUserForm({ user, onClose, onSuccess }: { user: UserProfile; onClose: () => void; onSuccess: () => void }) {
   const [form, setForm] = useState({
     firstName: user.firstName,
     lastName: user.lastName,
@@ -169,41 +264,52 @@ function EditUserModal({ user, onClose, onSuccess }: { user: UserProfile; onClos
     onSuccess,
   });
 
-  const roles: Role[] = ["ADMIN", "COORDINATOR", "RESPONDER"];
+  const availableRoles: Role[] = ["ADMIN", "RESPONDER", "VICTIM"];
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ background: "white", padding: "2rem", borderRadius: "8px", minWidth: "400px" }}>
-        <h2>Edit User</h2>
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-          <input placeholder="First name" value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))} />
-          <input placeholder="Last name" value={form.lastName} onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))} />
-          <div>
-            <p style={{ margin: "0 0 0.5rem" }}>Roles</p>
-            {roles.map(role => (
-              <label key={role} style={{ marginRight: "1rem" }}>
-                <input
-                  type="checkbox"
+    <>
+      <DialogHeader>
+        <DialogTitle>Edit User</DialogTitle>
+        <DialogDescription>Make changes to the user's profile and permissions.</DialogDescription>
+      </DialogHeader>
+      <div className="grid gap-4 py-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="edit-firstName">First name</Label>
+            <Input id="edit-firstName" value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="edit-lastName">Last name</Label>
+            <Input id="edit-lastName" value={form.lastName} onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))} />
+          </div>
+        </div>
+        <div className="space-y-3 pt-2">
+          <Label className="flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-muted-foreground"/> Manage Roles</Label>
+          <div className="grid grid-cols-2 gap-3">
+            {availableRoles.map(role => (
+              <div key={role} className="flex items-center space-x-2 border rounded-md p-3 hover:bg-muted/30 transition-colors">
+                <Checkbox 
+                  id={`edit-role-${role}`}
                   checked={form.roles.includes(role)}
-                  onChange={e => setForm(f => ({
+                  onCheckedChange={(checked) => setForm(f => ({
                     ...f,
-                    roles: e.target.checked
-                      ? [...f.roles, role]
-                      : f.roles.filter(r => r !== role)
+                    roles: checked ? [...f.roles, role] : f.roles.filter(r => r !== role)
                   }))}
                 />
-                {" "}{role}
-              </label>
+                <label htmlFor={`edit-role-${role}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer">
+                  {role}
+                </label>
+              </div>
             ))}
-          </div>
-          <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
-            <button onClick={onClose}>Cancel</button>
-            <button onClick={() => mutation.mutate(form)} disabled={mutation.isPending}>
-              {mutation.isPending ? "Saving..." : "Save"}
-            </button>
           </div>
         </div>
       </div>
-    </div>
+      <DialogFooter>
+        <Button variant="outline" onClick={onClose} disabled={mutation.isPending}>Cancel</Button>
+        <Button onClick={() => mutation.mutate(form)} disabled={mutation.isPending}>
+          {mutation.isPending ? "Saving..." : "Save Changes"}
+        </Button>
+      </DialogFooter>
+    </>
   );
 }

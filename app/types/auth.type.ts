@@ -7,7 +7,7 @@ export interface UserProfile {
   roles: string[];
 }
 
-export type Role = "ADMIN" | "COORDINATOR" | "RESPONDER";
+export type Role = "ADMIN" | "RESPONDER" | "VICTIM";
 
 export interface CreateUserPayload {
   firstName: string;

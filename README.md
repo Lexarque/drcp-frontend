@@ -130,7 +130,7 @@ All environment variables must be prefixed with `VITE_` to be accessible in the 
 | `VITE_KEYCLOAK_REALM` | Keycloak realm name | `drcp` |
 | `VITE_KEYCLOAK_CLIENT_ID` | Public client ID for the frontend | `drcp-frontend` |
 | `VITE_IDENTITY_SERVICE_URL` | Base URL of the Identity Service | `http://localhost:8900` |
-| `VITE_INCIDENT_SERVICE_URL` | Base URL of the Incident Service | `http://localhost:8082` |
+| `VITE_INCIDENT_SERVICE_URL` | Base URL of the Incident Service | `http://localhost:8901` |
 
 > ⚠️ Never put secrets (client secrets, passwords) in frontend environment variables. All `VITE_` variables are bundled into the JavaScript and visible in the browser.
 

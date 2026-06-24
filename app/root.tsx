@@ -1,6 +1,11 @@
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { KeycloakProvider } from "~/context/KeycloakContext";
+import appStylesHref from "./app.css?url";
+
+export const links = () => [
+  { rel: "stylesheet", href: appStylesHref },
+];
 
 const queryClient = new QueryClient({
   defaultOptions: {

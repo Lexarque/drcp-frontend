@@ -12,6 +12,8 @@ export default [
     route("dashboard", "pages/dashboard/index.tsx"),
 
     route("incidents", "pages/incidents/index.tsx"),
+    route("incidents/new", "pages/incidents/new.tsx"),
+    route("incidents/:id", "pages/incidents/details.tsx"),
 
     // Admin routes
     route("admin/users", "pages/admin/users.tsx"),
