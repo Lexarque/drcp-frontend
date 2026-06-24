@@ -201,6 +201,34 @@ This file passes the Keycloak auth response back to the parent window through a 
 
 ---
 
+## 📡 API Fetching & Services
+
+The frontend communicates with two distinct microservices: the **Identity Service** and the **Incident Service**. This communication is structured using `axios` and organized into dedicated service modules.
+
+### 1. Axios Instances & Authentication Interceptor
+Inside `app/lib/axios.ts`, we create two separate Axios instances using their respective base URLs from the `.env` file (`VITE_IDENTITY_SERVICE_URL` and `VITE_INCIDENT_SERVICE_URL`). 
+
+Crucially, an **interceptor** is configured on both instances. This interceptor intercepts outgoing requests and automatically injects the active Keycloak JWT token into the `Authorization: Bearer <token>` header. This ensures all API calls are authenticated seamlessly without components having to manually pass tokens. It also handles automatic token refreshes when the session nears expiration.
+
+### 2. Service Layer
+API calls are never written directly inside React components. Instead, they are abstracted into service files:
+- `app/services/identity.service.ts`
+- `app/services/incident.service.ts`
+
+These files define the typed endpoints. Additionally, because the Java backend wraps all responses in an `ApiResponse` structure (e.g., `{ status: 200, message: "...", data: [...] }`), these service functions parse the response and extract the `data` payload before returning it to the frontend.
+
+### 3. TanStack React Query
+For data fetching and state management in the UI, we use **React Query** (`useQuery` and `useMutation`). It handles loading states, error catching, background refetching, and caching. Components simply hook into the service layer like so:
+
+```tsx
+const { data: incidents, isLoading } = useQuery({
+  queryKey: ["incidents"],
+  queryFn: incidentService.getAll,
+});
+```
+
+---
+
 ## 🌿 Branch Naming Convention
 
 Always use lowercase and separate words with hyphens (`kebab-case`).
